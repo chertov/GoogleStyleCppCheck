@@ -161,6 +161,8 @@ _ERROR_CATEGORIES = [
   'build/storage_class',
   'comment/doxygen'
   'legal/copyright',
+  'naming/class_struct',
+  'naming/macro',
   'readability/braces',
   'readability/casting',
   'readability/check',
@@ -1386,6 +1388,10 @@ def CheckForNonStandardConstructs(filename, clean_lines, linenum,
   if class_decl_match:
     classinfo_stack.append(_ClassInfo(class_decl_match.group(3), linenum, False))
 
+    if line.count('{') - line.count('}') > 0:
+      error(filename, linenum, 'naming/class_struct', 5,
+                'Pair for { not found in class ' + classinfo_stack[-1].name)
+    
     if linenum > 0:
         if not Search(r'^\s*///', clean_lines.raw_lines[linenum - 1]):
             error(filename, linenum, 'comment/doxygen', 5,
@@ -1957,18 +1963,22 @@ def CheckBraces(filename, clean_lines, linenum, error):
   if spacesCount % 4 != 0:
     error(filename, linenum, 'whitespace/indent', 4, 'Found aliquant indent four spaces')
 
-  if Match(r'\s*{\s*$', line):
+  if Match(r'\s*{', line):
     StartSpacesTabCount = spacesCount / 4
     brOpenCount = 1
     nextlinenum = linenum
     while True:
       (nextline, nextlinenum) = GetNextNonBlankLine(clean_lines, nextlinenum)
-      if nextlinenum == -1: break
-      brOpenCount += nextline.count('{') - nextline.count('}');
-      if brOpenCount == 0: break
-      
+      if nextlinenum == -1:
+        error(filename, linenum, 'naming/class_struct', 4, 'Pair for { not found')
+        break
       spacesCount = len(Match(r'\s*', nextline).group(0))
       spacesTabCount = spacesCount / 4
+      brOpenCount += nextline.count('{') - nextline.count('}');
+      if brOpenCount == 0:
+        if spacesTabCount != StartSpacesTabCount:
+          error(filename, nextlinenum, 'whitespace/indent', 4, 'Pair for { has a different indentation')
+        break
       if spacesTabCount < StartSpacesTabCount + 1:
         error(filename, nextlinenum, 'whitespace/indent', 4, 'Line has no indentation in the block')
       
@@ -2168,13 +2178,13 @@ def CheckStyle(filename, clean_lines, linenum, file_extension, error):
           'the base class list in a class definition, the colon should '
           'be on the following line.')
 
-  if Search(r'^\s+#define', line):
-      error(filename, linenum, 'whitespace/preprocessor_directive', 2,
-            '#define must start with new line')
+  if Search(r'^\s*#define .*\(.*\)', line) and not Search(r'^\s*#define DEF_.*\(.*\)', line):
+      error(filename, linenum, 'naming/macro', 2,
+            'Macro name should start with DEF_')
       
-  if Search(r'^\s+#ifdef', line):
+  if Search(r'^\s+#', line):
       error(filename, linenum, 'whitespace/preprocessor_directive', 2,
-            '#ifdef must start with new line')
+            'Spaces before # found')
 
   # Check if the line is a header guard.
   is_header_guard = False
