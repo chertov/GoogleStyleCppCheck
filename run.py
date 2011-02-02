@@ -1906,6 +1906,29 @@ def GetPreviousNonBlankLine(clean_lines, linenum):
   return ('', -1)
 
 
+def GetNextNonBlankLine(clean_lines, linenum):
+  """Return the most recent non-blank line and its line number.
+
+  Args:
+    clean_lines: A CleansedLines instance containing the file contents.
+    linenum: The number of the line to check.
+
+  Returns:
+    A tuple with two elements.  The first element is the contents of the last
+    non-blank line before the current line, or the empty string if this is the
+    first non-blank line.  The second is the line number of that line, or -1
+    if this is the first non-blank line.
+  """
+
+  nextlinenum = linenum + 1
+  while nextlinenum < clean_lines.NumLines():
+    nextline = clean_lines.elided[nextlinenum]
+    if not IsBlankLine(nextline):     # if not a blank line...
+      return (nextline, nextlinenum)
+    nextlinenum += 1
+  return ('', -1)
+
+
 def CheckBraces(filename, clean_lines, linenum, error):
   """Looks for misplaced braces (e.g. at the end of line).
 
@@ -1918,17 +1941,37 @@ def CheckBraces(filename, clean_lines, linenum, error):
 
   line = clean_lines.elided[linenum]        # get rid of comments and strings
 
-  if Match(r'\s*{\s*$', line):
+  #if Match(r'\s*{\s*$', line):
     # We allow an open brace to start a line in the case where someone
     # is using braces in a block to explicitly create a new scope,
     # which is commonly used to control the lifetime of
     # stack-allocated variables.  We don't detect this perfectly: we
     # just don't complain if the last non-whitespace character on the
     # previous non-blank line is ';', ':', '{', or '}'.
-    prevline = GetPreviousNonBlankLine(clean_lines, linenum)[0]
-    if not Search(r'[;:}{]\s*$', prevline):
-      error(filename, linenum, 'whitespace/braces', 4,
-            '{ should almost always be at the end of the previous line')
+    #prevline = GetPreviousNonBlankLine(clean_lines, linenum)[0]
+    #if not Search(r'[;:}{]\s*$', prevline):
+    #  error(filename, linenum, 'whitespace/braces', 4, '{ should almost always be at the end of the previous line')
+
+
+  spacesCount = len(Match(r'\s*', line).group(0))
+  if spacesCount % 4 != 0:
+    error(filename, linenum, 'whitespace/indent', 4, 'Found aliquant indent four spaces')
+
+  if Match(r'\s*{\s*$', line):
+    StartSpacesTabCount = spacesCount / 4
+    brOpenCount = 1
+    nextlinenum = linenum
+    while True:
+      (nextline, nextlinenum) = GetNextNonBlankLine(clean_lines, nextlinenum)
+      if nextlinenum == -1: break
+      brOpenCount += nextline.count('{') - nextline.count('}');
+      if brOpenCount == 0: break
+      
+      spacesCount = len(Match(r'\s*', nextline).group(0))
+      spacesTabCount = spacesCount / 4
+      if spacesTabCount < StartSpacesTabCount + 1:
+        error(filename, nextlinenum, 'whitespace/indent', 4, 'Line has no indentation in the block')
+      
 
   # An else clause should be on the same line as the preceding closing brace.
   if Match(r'\s*else\s*', line):
@@ -3133,9 +3176,6 @@ def ParseArguments(args):
 
 def main():
 
-  
-
-  
   filenames = ParseArguments(sys.argv[1:])
 
   # Change stderr to write with replacement characters so we don't die
@@ -3155,5 +3195,8 @@ def main():
   sys.exit(_cpplint_state.error_count > 0)
 
 
+
+
 if __name__ == '__main__':
   ProcessFile("source.cpp", _cpplint_state.verbose_level)
+

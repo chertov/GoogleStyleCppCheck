@@ -1,21 +1,12 @@
 
-  #ifdef
-#ifdef
-  #define
-#define
 
-struct Sment {
-};
+    int t;
+        int t;
+    int t;
+    int t;
 
-/// asdasdasd
-class CTest {  // asdasd
-};
+{
+    test() {}
+}
 
-/// asdasdasd
-class CTest1 {
-int i = 1;
-};
-
-/// asdasdasd
-class CTest2 {
-};
+int p;
