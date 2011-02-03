@@ -17,12 +17,12 @@
 /// doxygen comment
 class CGLWidget : public QGLWidget
 {
- public:
+public:
     CGLWidget(QWidget *parent = 0,
                 const QGLWidget *shareWidget = 0,
                 Qt::WindowFlags f = 0);
 
- protected:
+protected:
     void initializeGL();
     void paintGL();
     void resizeGL(int width, int height);
@@ -33,7 +33,7 @@ class CGLWidget : public QGLWidget
     void wheelEvent(QWheelEvent *event);
     void timerEvent(QTimerEvent *event);
 
- private:
+private:
     double x, y, z;
     double Phi, Tet, R;
     double lastX, lastY;

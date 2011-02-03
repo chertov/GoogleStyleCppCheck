@@ -5,5 +5,4 @@
 
 void GLThread::run()
 {
-
 }

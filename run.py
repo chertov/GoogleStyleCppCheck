@@ -2210,12 +2210,12 @@ def CheckStyle(filename, clean_lines, linenum, file_extension, error):
           'Weird number of spaces at line-start.  '
           'Are you using a 2-space indent?')
   # Labels should always be indented at least one space.
-  elif not initial_spaces and line[:2] != '//' and Search(r'[^:]:\s*$', line):
-    error(filename, linenum, 'whitespace/labels', 4,
-          'Labels should always be indented at least one space.  '
-          'If this is a member-initializer list in a constructor or '
-          'the base class list in a class definition, the colon should '
-          'be on the following line.')
+  #elif not initial_spaces and line[:2] != '//' and Search(r'[^:]:\s*$', line):
+  #  error(filename, linenum, 'whitespace/labels', 4,
+  #        'Labels should always be indented at least one space.  '
+  #        'If this is a member-initializer list in a constructor or '
+  #        'the base class list in a class definition, the colon should '
+  #        'be on the following line.')
 
   # в строке ищу признаки макроса #define и (...), если признак найден,
   # но не найдено правильное определение '#define DEF_', то выдаем предупреждение... 

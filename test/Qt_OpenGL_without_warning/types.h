@@ -13,7 +13,7 @@
 #include <iostream>
 #include <vector>
 
-struct Svertex  // структура вертекса 
+struct Svertex  // структура вертекса
 {
 public:
     GLfloat x;
@@ -21,14 +21,14 @@ public:
     GLfloat z;
 };
 
-struct StextureCoord  // текстурные координаты 
+struct StextureCoord  // текстурные координаты
 {
 public:
     GLfloat u;
     GLfloat v;
 };
 
-struct Scolor  // структура цвета 
+struct Scolor  // структура цвета
 {
 public:
     GLubyte r;

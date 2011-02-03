@@ -7,18 +7,15 @@
 
 int main(int argc, char *argv[])
 {
-	setlocale(LC_ALL, "Russian"); 
+    setlocale(LC_ALL, "Russian");
 
-	QApplication a(argc, argv);
+    QApplication a(argc, argv);
 
-	GLWidget *glWidget = new GLWidget();
+    GLWidget *glWidget = new GLWidget();
+    glWidget->show();
 
-	glWidget->show();
+    GLThread *glThread = new GLThread();
+    glThread->start();
 
-	GLThread *glThread = new GLThread();
-
-	glThread->start();
-	
-
-	return a.exec();
+    return a.exec();
 }
