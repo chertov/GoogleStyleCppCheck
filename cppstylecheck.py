@@ -2014,7 +2014,7 @@ def CheckBraces(filename, clean_lines, linenum, error):
           if spacesTabCount != StartSpacesTabCount:
             error(filename, nextlinenum, 'whitespace/indent', 4, 'Line has no indentation in the block')
         else:
-          if nextline[0] != '#' and spacesTabCount < StartSpacesTabCount + 1:
+          if not nextline.startswith('#') and spacesTabCount < StartSpacesTabCount + 1:
             error(filename, nextlinenum, 'whitespace/indent', 4, 'Line has no indentation in the block')
 
   # An else clause should be on the same line as the preceding closing brace.
