@@ -1,8 +1,7 @@
 import os
 from functools import partial
 
-path = '.\\'
-command = '.\\..\\..\\run.py --verbose=0 --output=vs7 GLThread.h'
+command = '.\\..\\run.py --verbose=0 --output=vs7 Qt_OpenGL_without_warning\\GLThread.h'
 
 #print command
 os.system(command)

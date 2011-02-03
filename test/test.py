@@ -1,8 +1,8 @@
 import os
 from functools import partial
 
-path = '.\\'
-command = '.\\..\\..\\run.py --verbose=0 --output=vs7'
+path = '.\\Qt_OpenGL_without_warning'
+command = '.\\..\\run.py --verbose=0 --output=vs7'
 
 join = partial(os.path.join, path)
 filelist = [f for f in map(join, os.listdir(path)) if os.path.isfile(f)]

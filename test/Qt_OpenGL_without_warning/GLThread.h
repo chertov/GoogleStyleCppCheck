@@ -11,12 +11,23 @@
 #include "glWidget1.hpp"
 #include "glWidget2.hpp"
 
+{
+    /// doxygen comment
+    class CGLThread : public QThread
+    {
+        Q_OBJECT
+
+    protected:
+        void run();
+    };
+}
+
 /// doxygen comment
 class CGLThread : public QThread
 {
     Q_OBJECT
 
- protected:
+protected:
     void run();
 };
 

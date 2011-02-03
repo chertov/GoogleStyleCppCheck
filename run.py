@@ -1394,11 +1394,15 @@ def CheckForNonStandardConstructs(filename, clean_lines, linenum,
   if class_decl_match:
     classinfo_stack.append(_ClassInfo(class_decl_match.group(3), linenum, False))
 
+    # проверяем наличие скобки '{' в строке объявления класса.
+    # если находим начало блока объявления, то выдаем ошибку,
+    # но ошибки нет, если класс или структура объявлены одной строкой.
     if line.count('{') - line.count('}') > 0:
       error(filename, linenum, 'naming/class_struct', 5,
                 'Pair for { not found in class ' + classinfo_stack[-1].name)
     
     if linenum > 0:
+        # ищем на строчку выше класса комментарий в doxygen-стиле, который начинается с '///'
         if not Search(r'^\s*///', clean_lines.raw_lines[linenum - 1]):
             error(filename, linenum, 'comment/doxygen', 5,
                 'There is no doxygen comment for class ' + classinfo_stack[-1].name)
@@ -1431,10 +1435,13 @@ def CheckForNonStandardConstructs(filename, clean_lines, linenum,
     if not classinfo.seen_open_brace:
       return  # Everything else in this function is for after open brace
 
+
+    # Проверяем класс на наличие 'C' в начале его имени.
     if classinfo.isStruct == False and classinfo.name[0] != 'C':
         error(filename, linenum, 'build/class', 5,
           'Class name should start with capital C')
-        
+
+    # Проверяем структуру на наличие 'C' в начале её имени.
     if classinfo.isStruct == True and classinfo.name[0] != 'S':
         error(filename, linenum, 'build/class', 5,
           'Struct name should start with capital S')
@@ -2210,10 +2217,14 @@ def CheckStyle(filename, clean_lines, linenum, file_extension, error):
           'the base class list in a class definition, the colon should '
           'be on the following line.')
 
-  if Search(r'^\s*#define .*\(.*\)', line) and not Search(r'^\s*#define DEF_.*\(.*\)', line):
+  # в строке ищу признаки макроса #define и (...), если признак найден,
+  # но не найдено правильное определение '#define DEF_', то выдаем предупреждение... 
+  if Search(r'^\s*#define .*\(.*\)', line):
+    if not Search(r'^\s*#define DEF_', line):
       error(filename, linenum, 'naming/macro', 2,
             'Macro name should start with DEF_')
-      
+  # проверяем наличие пробелов в начале строки перед символом #
+  # т.о. обнаруживаем #define и подобные дерективы начинающиеся не с самого начала строки.
   if Search(r'^\s+#', line):
       error(filename, linenum, 'whitespace/preprocessor_directive', 2,
             'Spaces before # found')
