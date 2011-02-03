@@ -13,6 +13,9 @@
 
 
 {
+    class CTest1 {
+    }
+
     /// asdasd
     class Ctest
     {
