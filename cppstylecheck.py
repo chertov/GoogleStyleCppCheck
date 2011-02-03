@@ -282,12 +282,6 @@ for op, inv_replacement in [('==', 'NE'), ('!=', 'EQ'),
   _CHECK_REPLACEMENT['ASSERT_FALSE_M'][op] = 'ASSERT_%s_M' % inv_replacement
 
 
-_NO_INDENT_WORDS = [
-  'public:', 'private:', 'protected:'
-  ]
-
-
-
 # These constants define types of headers for use with
 # _IncludeState.CheckNextIncludeOrder().
 _C_SYS_HEADER = 1
