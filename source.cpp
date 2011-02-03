@@ -1,8 +1,8 @@
 
 
-#define DEF_MAX(i, j) ((i) > (j) ? (i) : (j)) // хорошо
+#define DEF_MAX(i, j) ((i) > (j) ? (i) : (j)) // С…РѕСЂРѕС€Рѕ
 
-#define MAX(i, j) ((i) > (j) ? (i) : (j)) // плохо
+// #define MAX(i, j) ((i) > (j) ? (i) : (j)) // РїР»РѕС…Рѕ
 
 
 #ifdef
@@ -11,21 +11,25 @@
 #define
 
 //// asdasdas
+{
+    /// asdasd
     class Ctest
     {
-        public:
-        int k;
-    }
-
-    int t;
+    public:
+    private:
+    protected:
         int t;
-    int t;
-    int t;
-
-{ int k;
-    {
-        test() {}
+        if (t == 1)
+            std::cout << "Hello, World!" << std::endl;
+        else
+        {
+            std::cout << t << std::endl;
+        }
     }
-}
 
-int p;
+    int t;
+    int t;
+    int t;
+    int t;
+    int p;
+}

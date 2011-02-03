@@ -282,6 +282,12 @@ for op, inv_replacement in [('==', 'NE'), ('!=', 'EQ'),
   _CHECK_REPLACEMENT['ASSERT_FALSE_M'][op] = 'ASSERT_%s_M' % inv_replacement
 
 
+_NO_INDENT_WORDS = [
+  'public:', 'private:', 'protected:'
+  ]
+
+
+
 # These constants define types of headers for use with
 # _IncludeState.CheckNextIncludeOrder().
 _C_SYS_HEADER = 1
@@ -1959,29 +1965,55 @@ def CheckBraces(filename, clean_lines, linenum, error):
     #  error(filename, linenum, 'whitespace/braces', 4, '{ should almost always be at the end of the previous line')
 
 
+  # проверяю каждую строку на кратность отступа 4-м пробелам
   spacesCount = len(Match(r'\s*', line).group(0))
   if spacesCount % 4 != 0:
     error(filename, linenum, 'whitespace/indent', 4, 'Found aliquant indent four spaces')
 
+
+  # если строка вид '   {   ' т.е. скобка открывающая блок, то проверяем далее строки до закрывающей скобки
   if Match(r'\s*{', line):
-    StartSpacesTabCount = spacesCount / 4
-    brOpenCount = 1
+    
+    StartSpacesTabCount = spacesCount / 4   # запоминаем количество отступов перед открывающейся скобкой
+    brOpenCount = 1    # переменная хранит текущее количество вложенных блоков
     nextlinenum = linenum
+
+    # идем до конца файла
     while True:
+      # получаем следующую непустую строку кода и ее номер 
       (nextline, nextlinenum) = GetNextNonBlankLine(clean_lines, nextlinenum)
+
+      # если ее номер -1, то файл закончился
       if nextlinenum == -1:
+        # и поскольку закрывающейся скобки мы не нашли, то выдаем ошибку
         error(filename, linenum, 'naming/class_struct', 4, 'Pair for { not found')
         break
+
+      # получаем количество пробелов перед началом кода в текущей строке
       spacesCount = len(Match(r'\s*', nextline).group(0))
-      spacesTabCount = spacesCount / 4
+      spacesTabCount = spacesCount / 4  # пересчитываем в количество отступов
+      
+      # прибавляем к счетчику вложенных блоков количество незакрытых скобок в строке
+      # т.о. мы пропускаем однострочные блоки вида if(...) {...}
+      # при нахождении зкрывающей скобки нашего блока счетчик примет значение 0
       brOpenCount += nextline.count('{') - nextline.count('}');
+
       if brOpenCount == 0:
+        # закрывающая блок скобка должна иметь такой же отступ как и открывающая
         if spacesTabCount != StartSpacesTabCount:
           error(filename, nextlinenum, 'whitespace/indent', 4, 'Pair for { has a different indentation')
         break
-      if spacesTabCount < StartSpacesTabCount + 1:
-        error(filename, nextlinenum, 'whitespace/indent', 4, 'Line has no indentation in the block')
-      
+
+      # При мы brOpenCount==1 находимся в текущем блоке. Если brOpenCount более 1, то текущая строка принадлежит вложенному блоку
+      if brOpenCount == 1:
+        
+        # строка внутри блока должна иметь на один отступ больше чем скобки блока за исключение слов вроде public, private
+        if Match(r'\s*(public:|private:|protected:|public slots:|private slots:|signals:)', nextline):
+          if spacesTabCount != StartSpacesTabCount:
+            error(filename, nextlinenum, 'whitespace/indent', 4, 'Line has no indentation in the block')
+        else:
+          if spacesTabCount != StartSpacesTabCount + 1:
+            error(filename, nextlinenum, 'whitespace/indent', 4, 'Line has no indentation in the block')
 
   # An else clause should be on the same line as the preceding closing brace.
   if Match(r'\s*else\s*', line):
@@ -3208,5 +3240,5 @@ def main():
 
 
 if __name__ == '__main__':
-  ProcessFile("source.cpp", _cpplint_state.verbose_level)
+  ProcessFile("ex1.cpp", _cpplint_state.verbose_level)
 
