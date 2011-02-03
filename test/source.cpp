@@ -13,9 +13,6 @@
 
 
 {
-    class CTest1 {
-    }
-
     /// asdasd
     class Ctest
     {
@@ -27,12 +24,19 @@
     private slots:
     signals:
 
+
+
         int t;
         if (t == 1)
             std::cout << "Hello, World!" << std::endl;
         else
         {
             std::cout << t << std::endl;
+
+
+#ifdef _WIN64
+            int i = 0;
+#endif // _WIN64
         }
 
         if (m == 1) {
