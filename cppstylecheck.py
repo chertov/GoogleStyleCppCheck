@@ -1384,7 +1384,8 @@ def CheckForNonStandardConstructs(filename, clean_lines, linenum,
   # to be a worthwhile addition to the checks.
   classinfo_stack = class_state.classinfo_stack
   # Look for a class declaration
-  class_decl_match = Match(r'\s*(template\s*<[\w\s<>,:]*>\s*)?(class)\s+(\w+(::\w+)*)', line)
+  class_decl_match = Match(
+      r'\s*(template\s*<[\w\s<>,:]*>\s*)?(class)\s+(\w+(::\w+)*)', line)
   if class_decl_match:
     classinfo_stack.append(_ClassInfo(class_decl_match.group(3), linenum, False))
 
@@ -1973,8 +1974,8 @@ def CheckBraces(filename, clean_lines, linenum, error):
 
 
   # если строка вид '   {   ' т.е. скобка открывающая блок, то проверяем далее строки до закрывающей скобки
-  if Match(r'\s*{', line):
-    
+  # if Match(r'\s*{', line):
+  if line.count('{') - line.count('}') > 0: 
     StartSpacesTabCount = spacesCount / 4   # запоминаем количество отступов перед открывающейся скобкой
     brOpenCount = 1    # переменная хранит текущее количество вложенных блоков
     nextlinenum = linenum

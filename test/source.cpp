@@ -7,11 +7,11 @@
 
 
 #ifdef
-#ifdef
+    #ifdef         // ошибка
 #define
 #define
 
-//// asdasdas
+
 {
     /// asdasd
     class Ctest
@@ -30,6 +30,10 @@
         else
         {
             std::cout << t << std::endl;
+        }
+
+        if (m == 1) {
+            int l;
         }
     }
 
