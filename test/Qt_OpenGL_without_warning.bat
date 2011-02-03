@@ -1,0 +1,3 @@
+cd Qt_OpenGL_without_warning
+test.py
+pause

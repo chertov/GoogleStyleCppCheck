@@ -2012,7 +2012,7 @@ def CheckBraces(filename, clean_lines, linenum, error):
           if spacesTabCount != StartSpacesTabCount:
             error(filename, nextlinenum, 'whitespace/indent', 4, 'Line has no indentation in the block')
         else:
-          if spacesTabCount != StartSpacesTabCount + 1:
+          if spacesTabCount < StartSpacesTabCount + 1:
             error(filename, nextlinenum, 'whitespace/indent', 4, 'Line has no indentation in the block')
 
   # An else clause should be on the same line as the preceding closing brace.
@@ -3217,7 +3217,6 @@ def ParseArguments(args):
 
 
 def main():
-
   filenames = ParseArguments(sys.argv[1:])
 
   # Change stderr to write with replacement characters so we don't die
@@ -3228,17 +3227,12 @@ def main():
                                          'replace')
 
   _cpplint_state.ResetErrorCounts()
-#  for filename in filenames:
-#    ProcessFile(filename, _cpplint_state.verbose_level)
-
-
+  for filename in filenames:
+    ProcessFile(filename, _cpplint_state.verbose_level)
   _cpplint_state.PrintErrorCounts()
 
   sys.exit(_cpplint_state.error_count > 0)
 
 
-
-
 if __name__ == '__main__':
-  ProcessFile("ex1.cpp", _cpplint_state.verbose_level)
-
+  main()
