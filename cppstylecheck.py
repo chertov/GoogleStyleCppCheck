@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+﻿#!/usr/bin/python2.4
 #
 # Copyright (c) 2009 Google Inc. All rights reserved.
 #
@@ -159,7 +159,10 @@ _ERROR_CATEGORIES = [
   'build/namespaces',
   'build/printf_format',
   'build/storage_class',
+  'comment/doxygen'
   'legal/copyright',
+  'naming/class_struct',
+  'naming/macro',
   'readability/braces',
   'readability/casting',
   'readability/check',
@@ -201,6 +204,7 @@ _ERROR_CATEGORIES = [
   'whitespace/newline',
   'whitespace/operators',
   'whitespace/parens',
+  'whitespace/preprocessor_directive'
   'whitespace/semicolon',
   'whitespace/tab',
   'whitespace/todo'
@@ -276,6 +280,12 @@ for op, inv_replacement in [('==', 'NE'), ('!=', 'EQ'),
   _CHECK_REPLACEMENT['ASSERT_FALSE'][op] = 'ASSERT_%s' % inv_replacement
   _CHECK_REPLACEMENT['EXPECT_FALSE_M'][op] = 'EXPECT_%s_M' % inv_replacement
   _CHECK_REPLACEMENT['ASSERT_FALSE_M'][op] = 'ASSERT_%s_M' % inv_replacement
+
+
+_NO_INDENT_WORDS = [
+  'public:', 'private:', 'protected:'
+  ]
+
 
 
 # These constants define types of headers for use with
@@ -1248,8 +1258,9 @@ def CheckInvalidIncrement(filename, clean_lines, linenum, error):
 class _ClassInfo(object):
   """Stores information about a class."""
 
-  def __init__(self, name, linenum):
+  def __init__(self, name, linenum, isStruct):
     self.name = name
+    self.isStruct = isStruct
     self.linenum = linenum
     self.seen_open_brace = False
     self.is_derived = False
@@ -1379,10 +1390,28 @@ def CheckForNonStandardConstructs(filename, clean_lines, linenum,
   # to be a worthwhile addition to the checks.
   classinfo_stack = class_state.classinfo_stack
   # Look for a class declaration
-  class_decl_match = Match(
-      r'\s*(template\s*<[\w\s<>,:]*>\s*)?(class|struct)\s+(\w+(::\w+)*)', line)
+  class_decl_match = Match(r'\s*(template\s*<[\w\s<>,:]*>\s*)?(class)\s+(\w+(::\w+)*)', line)
   if class_decl_match:
-    classinfo_stack.append(_ClassInfo(class_decl_match.group(3), linenum))
+    classinfo_stack.append(_ClassInfo(class_decl_match.group(3), linenum, False))
+
+    # проверяем наличие скобки '{' в строке объявления класса.
+    # если находим начало блока объявления, то выдаем ошибку,
+    # но ошибки нет, если класс или структура объявлены одной строкой.
+    if line.count('{') - line.count('}') > 0:
+      error(filename, linenum, 'naming/class_struct', 5,
+                'Pair for { not found in class ' + classinfo_stack[-1].name)
+    
+    if linenum > 0:
+        # ищем на строчку выше класса комментарий в doxygen-стиле, который начинается с '///'
+        if not Search(r'^\s*///', clean_lines.raw_lines[linenum - 1]):
+            error(filename, linenum, 'comment/doxygen', 5,
+                'There is no doxygen comment for class ' + classinfo_stack[-1].name)
+
+  class_decl_match = Match(r'\s*(template\s*<[\w\s<>,:]*>\s*)?(struct)\s+(\w+(::\w+)*)', line)
+  if class_decl_match:
+    classinfo_stack.append(_ClassInfo(class_decl_match.group(3), linenum, True))
+
+
 
   # Everything else in this function uses the top of the stack if it's
   # not empty.
@@ -1390,7 +1419,7 @@ def CheckForNonStandardConstructs(filename, clean_lines, linenum,
     return
 
   classinfo = classinfo_stack[-1]
-
+    
   # If the opening brace hasn't been seen look for it and also
   # parent class declarations.
   if not classinfo.seen_open_brace:
@@ -1406,9 +1435,21 @@ def CheckForNonStandardConstructs(filename, clean_lines, linenum,
     if not classinfo.seen_open_brace:
       return  # Everything else in this function is for after open brace
 
+
+    # Проверяем класс на наличие 'C' в начале его имени.
+    if classinfo.isStruct == False and classinfo.name[0] != 'C':
+        error(filename, linenum, 'build/class', 5,
+          'Class name should start with capital C')
+
+    # Проверяем структуру на наличие 'C' в начале её имени.
+    if classinfo.isStruct == True and classinfo.name[0] != 'S':
+        error(filename, linenum, 'build/class', 5,
+          'Struct name should start with capital S')
+        
   # The class may have been declared with namespace or classname qualifiers.
   # The constructor and destructor will not have those qualifiers.
   base_classname = classinfo.name.split('::')[-1]
+  
 
   # Look for single-argument constructors that aren't marked explicit.
   # Technically a valid construct, but against style.
@@ -1725,11 +1766,10 @@ def CheckSpacing(filename, clean_lines, linenum, error):
       # Allow one space for new scopes, two spaces otherwise:
       if (not Match(r'^\s*{ //', line) and
           ((commentpos >= 1 and
-            line[commentpos-1] not in string.whitespace) or
-           (commentpos >= 2 and
-            line[commentpos-2] not in string.whitespace))):
+            line[commentpos-1] not in string.whitespace))):
         error(filename, linenum, 'whitespace/comments', 2,
-              'At least two spaces is best between code and comments')
+              'At least one space is best between code and comments')
+        
       # There should always be a space between the // and the comment
       commentend = commentpos + 2
       if commentend < len(line) and not line[commentend] == ' ':
@@ -1885,6 +1925,29 @@ def GetPreviousNonBlankLine(clean_lines, linenum):
   return ('', -1)
 
 
+def GetNextNonBlankLine(clean_lines, linenum):
+  """Return the most recent non-blank line and its line number.
+
+  Args:
+    clean_lines: A CleansedLines instance containing the file contents.
+    linenum: The number of the line to check.
+
+  Returns:
+    A tuple with two elements.  The first element is the contents of the last
+    non-blank line before the current line, or the empty string if this is the
+    first non-blank line.  The second is the line number of that line, or -1
+    if this is the first non-blank line.
+  """
+
+  nextlinenum = linenum + 1
+  while nextlinenum < clean_lines.NumLines():
+    nextline = clean_lines.elided[nextlinenum]
+    if not IsBlankLine(nextline):     # if not a blank line...
+      return (nextline, nextlinenum)
+    nextlinenum += 1
+  return ('', -1)
+
+
 def CheckBraces(filename, clean_lines, linenum, error):
   """Looks for misplaced braces (e.g. at the end of line).
 
@@ -1897,17 +1960,67 @@ def CheckBraces(filename, clean_lines, linenum, error):
 
   line = clean_lines.elided[linenum]        # get rid of comments and strings
 
-  if Match(r'\s*{\s*$', line):
+  #if Match(r'\s*{\s*$', line):
     # We allow an open brace to start a line in the case where someone
     # is using braces in a block to explicitly create a new scope,
     # which is commonly used to control the lifetime of
     # stack-allocated variables.  We don't detect this perfectly: we
     # just don't complain if the last non-whitespace character on the
     # previous non-blank line is ';', ':', '{', or '}'.
-    prevline = GetPreviousNonBlankLine(clean_lines, linenum)[0]
-    if not Search(r'[;:}{]\s*$', prevline):
-      error(filename, linenum, 'whitespace/braces', 4,
-            '{ should almost always be at the end of the previous line')
+    #prevline = GetPreviousNonBlankLine(clean_lines, linenum)[0]
+    #if not Search(r'[;:}{]\s*$', prevline):
+    #  error(filename, linenum, 'whitespace/braces', 4, '{ should almost always be at the end of the previous line')
+
+
+  # проверяю каждую строку на кратность отступа 4-м пробелам
+  spacesCount = len(Match(r'\s*', line).group(0))
+  if spacesCount % 4 != 0:
+    error(filename, linenum, 'whitespace/indent', 4, 'Found aliquant indent four spaces')
+
+
+  # если строка вид '   {   ' т.е. скобка открывающая блок, то проверяем далее строки до закрывающей скобки
+  if Match(r'\s*{', line):
+    
+    StartSpacesTabCount = spacesCount / 4   # запоминаем количество отступов перед открывающейся скобкой
+    brOpenCount = 1    # переменная хранит текущее количество вложенных блоков
+    nextlinenum = linenum
+
+    # идем до конца файла
+    while True:
+      # получаем следующую непустую строку кода и ее номер 
+      (nextline, nextlinenum) = GetNextNonBlankLine(clean_lines, nextlinenum)
+
+      # если ее номер -1, то файл закончился
+      if nextlinenum == -1:
+        # и поскольку закрывающейся скобки мы не нашли, то выдаем ошибку
+        error(filename, linenum, 'naming/class_struct', 4, 'Pair for { not found')
+        break
+
+      # получаем количество пробелов перед началом кода в текущей строке
+      spacesCount = len(Match(r'\s*', nextline).group(0))
+      spacesTabCount = spacesCount / 4  # пересчитываем в количество отступов
+      
+      # прибавляем к счетчику вложенных блоков количество незакрытых скобок в строке
+      # т.о. мы пропускаем однострочные блоки вида if(...) {...}
+      # при нахождении зкрывающей скобки нашего блока счетчик примет значение 0
+      brOpenCount += nextline.count('{') - nextline.count('}');
+
+      if brOpenCount == 0:
+        # закрывающая блок скобка должна иметь такой же отступ как и открывающая
+        if spacesTabCount != StartSpacesTabCount:
+          error(filename, nextlinenum, 'whitespace/indent', 4, 'Pair for { has a different indentation')
+        break
+
+      # При мы brOpenCount==1 находимся в текущем блоке. Если brOpenCount более 1, то текущая строка принадлежит вложенному блоку
+      if brOpenCount == 1:
+        
+        # строка внутри блока должна иметь на один отступ больше чем скобки блока за исключение слов вроде public, private
+        if Match(r'\s*(public:|private:|protected:|public slots:|private slots:|protected slots:|signals:)', nextline):
+          if spacesTabCount != StartSpacesTabCount:
+            error(filename, nextlinenum, 'whitespace/indent', 4, 'Line has no indentation in the block')
+        else:
+          if spacesTabCount < StartSpacesTabCount + 1:
+            error(filename, nextlinenum, 'whitespace/indent', 4, 'Line has no indentation in the block')
 
   # An else clause should be on the same line as the preceding closing brace.
   if Match(r'\s*else\s*', line):
@@ -2097,14 +2210,24 @@ def CheckStyle(filename, clean_lines, linenum, file_extension, error):
           'Weird number of spaces at line-start.  '
           'Are you using a 2-space indent?')
   # Labels should always be indented at least one space.
-  elif not initial_spaces and line[:2] != '//' and Search(r'[^:]:\s*$',
-                                                          line):
-    error(filename, linenum, 'whitespace/labels', 4,
-          'Labels should always be indented at least one space.  '
-          'If this is a member-initializer list in a constructor or '
-          'the base class list in a class definition, the colon should '
-          'be on the following line.')
+  #elif not initial_spaces and line[:2] != '//' and Search(r'[^:]:\s*$', line):
+  #  error(filename, linenum, 'whitespace/labels', 4,
+  #        'Labels should always be indented at least one space.  '
+  #        'If this is a member-initializer list in a constructor or '
+  #        'the base class list in a class definition, the colon should '
+  #        'be on the following line.')
 
+  # в строке ищу признаки макроса #define и (...), если признак найден,
+  # но не найдено правильное определение '#define DEF_', то выдаем предупреждение... 
+  if Search(r'^\s*#define .*\(.*\)', line):
+    if not Search(r'^\s*#define DEF_', line):
+      error(filename, linenum, 'naming/macro', 2,
+            'Macro name should start with DEF_')
+  # проверяем наличие пробелов в начале строки перед символом #
+  # т.о. обнаруживаем #define и подобные дерективы начинающиеся не с самого начала строки.
+  if Search(r'^\s+#', line):
+      error(filename, linenum, 'whitespace/preprocessor_directive', 2,
+            'Spaces before # found')
 
   # Check if the line is a header guard.
   is_header_guard = False
