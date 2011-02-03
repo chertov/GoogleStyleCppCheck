@@ -12,7 +12,8 @@ namespace test
             std::cout << "Hello, World!" << std::endl;
         else
         {
-            std::cout << std::endl; // тут ошибки нет для блока else
+            // тут ошибки нет, т.к. строка обрабатывается уже внутри блока else
+            std::cout << std::endl;
         }
     }
 }
