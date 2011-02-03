@@ -1394,7 +1394,7 @@ def CheckForNonStandardConstructs(filename, clean_lines, linenum,
     # но ошибки нет, если класс или структура объявлены одной строкой.
     if line.count('{') - line.count('}') > 0:
       error(filename, linenum, 'naming/class_struct', 5,
-                'Pair for { not found in class ' + classinfo_stack[-1].name)
+                'Found incorrect declaration of the class ' + classinfo_stack[-1].name)
     
     if linenum > 0:
         # ищем на строчку выше класса комментарий в doxygen-стиле, который начинается с '///'
