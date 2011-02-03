@@ -1,8 +1,9 @@
 
+// Copyright (c) 2009 Chertov Maxim <chertovm@gmail.com>
 
 #define DEF_MAX(i, j) ((i) > (j) ? (i) : (j)) // хорошо
 
-// #define MAX(i, j) ((i) > (j) ? (i) : (j)) // плохо
+#define MAX(i, j) ((i) > (j) ? (i) : (j)) // плохо
 
 
 #ifdef
@@ -18,6 +19,11 @@
     public:
     private:
     protected:
+
+
+    private slots:
+    signals:
+
         int t;
         if (t == 1)
             std::cout << "Hello, World!" << std::endl;
