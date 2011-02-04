@@ -1388,25 +1388,16 @@ def CheckForNonStandardConstructs(filename, clean_lines, linenum,
       r'\s*(template\s*<[\w\s<>,:]*>\s*)?(class)\s+(\w+(::\w+)*)', line)
   if class_decl_match:
     classinfo_stack.append(_ClassInfo(class_decl_match.group(3), linenum, False))
-
-    # проверяем наличие скобки '{' в строке объявления класса.
-    # если находим начало блока объявления, то выдаем ошибку,
-    # но ошибки нет, если класс или структура объявлены одной строкой.
-    if line.count('{') - line.count('}') > 0:
-      error(filename, linenum, 'naming/class_struct', 5,
-                'Found incorrect declaration of the class ' + classinfo_stack[-1].name)
     
     if linenum > 0:
         # ищем на строчку выше класса комментарий в doxygen-стиле, который начинается с '///'
         if not Search(r'^\s*///', clean_lines.raw_lines[linenum - 1]):
             error(filename, linenum, 'comment/doxygen', 5,
                 'There is no doxygen comment for class ' + classinfo_stack[-1].name)
-
-  class_decl_match = Match(r'\s*(template\s*<[\w\s<>,:]*>\s*)?(struct)\s+(\w+(::\w+)*)', line)
-  if class_decl_match:
-    classinfo_stack.append(_ClassInfo(class_decl_match.group(3), linenum, True))
-
-
+  else:
+      class_decl_match = Match(r'\s*(template\s*<[\w\s<>,:]*>\s*)?(struct)\s+(\w+(::\w+)*)', line)
+      if class_decl_match:
+        classinfo_stack.append(_ClassInfo(class_decl_match.group(3), linenum, True))
 
   # Everything else in this function uses the top of the stack if it's
   # not empty.
@@ -1974,8 +1965,10 @@ def CheckBraces(filename, clean_lines, linenum, error):
 
 
   # если строка вид '   {   ' т.е. скобка открывающая блок, то проверяем далее строки до закрывающей скобки
-  # if Match(r'\s*{', line):
-  if line.count('{') - line.count('}') > 0: 
+  #if Match(r'\s*{', line):
+  if line.count('{') - line.count('}') > 0:
+    if not Match(r'\s*{', line):
+      error(filename, linenum, 'whitespace/indent', 4, 'Pair for { has a different indentation')
     StartSpacesTabCount = spacesCount / 4   # запоминаем количество отступов перед открывающейся скобкой
     brOpenCount = 1    # переменная хранит текущее количество вложенных блоков
     nextlinenum = linenum

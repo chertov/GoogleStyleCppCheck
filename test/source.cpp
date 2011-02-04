@@ -11,6 +11,8 @@
 #define
 #define
 
+struct Sstr {
+}
 
 {
     /// asdasd
@@ -41,7 +43,8 @@
 #endif // _WIN64
         }
 
-        if (m == 1) {
+        if (m == 1)
+        {
             int l;
         }
     }
