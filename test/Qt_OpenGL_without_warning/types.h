@@ -10,10 +10,10 @@
 #include <gl/glut.h>  // заголовочный файл для библиотеки GLut
 
 #include <stdlib.h>
-#include <iostream>
+#include <iostream>   // NOLINT
 #include <vector>
 
-struct Svertex  // структура вертекса
+struct Svertex  // структура вертекса NOLINT
 {
 public:
     GLfloat x;
@@ -21,6 +21,7 @@ public:
     GLfloat z;
 };
 
+/// struct comment
 struct StextureCoord  // текстурные координаты
 {
 public:
@@ -28,6 +29,7 @@ public:
     GLfloat v;
 };
 
+/// struct comment
 struct Scolor  // структура цвета
 {
 public:

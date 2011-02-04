@@ -52,7 +52,5 @@ struct Sstr
 
     int t;
     int t;
-    int t;
-    int t;
     int p;
 }
