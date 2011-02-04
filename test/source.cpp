@@ -32,14 +32,15 @@ struct Sstr
 
 
         int t;
-        if (t == 1) // NOLINT(whitespace/parens)
+        if(t == 1)  // NOLINT(whitespace/parens)
             std::cout << "Hello, World!" << std::endl;
         else
         {
             std::cout << t << std::endl;
 
             int l;
-#ifdef _WIN64
+  #ifdef _WIN64 // NOLINT(whitespace/preprocessor_directive)
+            if(l=1)int k;      // NOLINT(whitespace/parens)
 #endif // _WIN64
         }
 

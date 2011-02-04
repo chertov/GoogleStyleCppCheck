@@ -3240,5 +3240,4 @@ def main():
 
 
 if __name__ == '__main__':
-  #ProcessFile('test/source.cpp', _cpplint_state.verbose_level)
   main()
