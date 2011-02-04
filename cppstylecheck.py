@@ -159,7 +159,7 @@ _ERROR_CATEGORIES = [
   'build/namespaces',
   'build/printf_format',
   'build/storage_class',
-  'comment/doxygen'
+  'comment/doxygen',
   'legal/copyright',
   'naming/class_struct',
   'naming/macro',
@@ -204,7 +204,7 @@ _ERROR_CATEGORIES = [
   'whitespace/newline',
   'whitespace/operators',
   'whitespace/parens',
-  'whitespace/preprocessor_directive'
+  'whitespace/preprocessor_directive',
   'whitespace/semicolon',
   'whitespace/tab',
   'whitespace/todo'
@@ -344,8 +344,9 @@ def IsErrorSuppressedByNolint(category, linenum):
     category: str, the category of the error.
     linenum: int, the current line number.
   Returns:
-    bool, True iff the error should be suppressed due to a NOLINT comment.
+    bool, True if the error should be suppressed due to a NOLINT comment.
   """
+  
   return (linenum in _error_suppressions.get(category, set()) or
           linenum in _error_suppressions.get(None, set()))
 
@@ -1388,7 +1389,10 @@ def CheckForNonStandardConstructs(filename, clean_lines, linenum,
       r'\s*(template\s*<[\w\s<>,:]*>\s*)?(class)\s+(\w+(::\w+)*)', line)
   if class_decl_match:
     classinfo_stack.append(_ClassInfo(class_decl_match.group(3), linenum, False))
-    
+    # Проверяем класс на наличие 'C' в начале его имени.
+    if not classinfo_stack[-1].name.startswith('C'):
+        error(filename, linenum, 'build/class', 5,
+          'Class name should start with capital C')
     if linenum > 0:
         # ищем на строчку выше класса комментарий в doxygen-стиле, который начинается с '///'
         if not Search(r'^\s*///', clean_lines.raw_lines[linenum - 1]):
@@ -1398,6 +1402,15 @@ def CheckForNonStandardConstructs(filename, clean_lines, linenum,
       class_decl_match = Match(r'\s*(template\s*<[\w\s<>,:]*>\s*)?(struct)\s+(\w+(::\w+)*)', line)
       if class_decl_match:
         classinfo_stack.append(_ClassInfo(class_decl_match.group(3), linenum, True))
+        # Проверяем структуру на наличие 'S' в начале её имени.
+        if not classinfo_stack[-1].name.startswith('S'):
+            error(filename, linenum, 'build/class', 5,
+              'Struct name should start with capital S')
+        if linenum > 0:
+            # ищем на строчку выше структуры комментарий в doxygen-стиле, который начинается с '///'
+            if not Search(r'^\s*///', clean_lines.raw_lines[linenum - 1]):
+                error(filename, linenum, 'comment/doxygen', 5,
+                    'There is no doxygen comment for struct ' + classinfo_stack[-1].name)
 
   # Everything else in this function uses the top of the stack if it's
   # not empty.
@@ -1422,15 +1435,7 @@ def CheckForNonStandardConstructs(filename, clean_lines, linenum,
       return  # Everything else in this function is for after open brace
 
 
-    # Проверяем класс на наличие 'C' в начале его имени.
-    if classinfo.isStruct == False and classinfo.name[0] != 'C':
-        error(filename, linenum, 'build/class', 5,
-          'Class name should start with capital C')
 
-    # Проверяем структуру на наличие 'C' в начале её имени.
-    if classinfo.isStruct == True and classinfo.name[0] != 'S':
-        error(filename, linenum, 'build/class', 5,
-          'Struct name should start with capital S')
         
   # The class may have been declared with namespace or classname qualifiers.
   # The constructor and destructor will not have those qualifiers.
@@ -1961,8 +1966,7 @@ def CheckBraces(filename, clean_lines, linenum, error):
   # проверяю каждую строку на кратность отступа 4-м пробелам
   spacesCount = len(Match(r'\s*', line).group(0))
   if spacesCount % 4 != 0:
-    error(filename, linenum, 'whitespace/indent', 4, 'Found aliquant indent four spaces')
-
+      error(filename, linenum, 'whitespace/indent', 4, 'Found aliquant indent four spaces')
 
   # если строка вид '   {   ' т.е. скобка открывающая блок, то проверяем далее строки до закрывающей скобки
   #if Match(r'\s*{', line):
@@ -1983,7 +1987,7 @@ def CheckBraces(filename, clean_lines, linenum, error):
         # и поскольку закрывающейся скобки мы не нашли, то выдаем ошибку
         error(filename, linenum, 'naming/class_struct', 4, 'Pair for { not found')
         break
-
+      
       # получаем количество пробелов перед началом кода в текущей строке
       spacesCount = len(Match(r'\s*', nextline).group(0))
       spacesTabCount = spacesCount / 4  # пересчитываем в количество отступов
@@ -2007,7 +2011,7 @@ def CheckBraces(filename, clean_lines, linenum, error):
           if spacesTabCount != StartSpacesTabCount:
             error(filename, nextlinenum, 'whitespace/indent', 4, 'Line has no indentation in the block')
         else:
-          if not nextline.startswith('#') and spacesTabCount < StartSpacesTabCount + 1:
+          if not Match(r'\s*#',nextline) and spacesTabCount < StartSpacesTabCount + 1:
             error(filename, nextlinenum, 'whitespace/indent', 4, 'Line has no indentation in the block')
 
   # An else clause should be on the same line as the preceding closing brace.
@@ -3027,7 +3031,7 @@ def ProcessLine(filename, file_extension,
 
   """
   raw_lines = clean_lines.raw_lines
-  ParseNolintSuppressions(filename, raw_lines[line], line, error)
+  #ParseNolintSuppressions(filename, raw_lines[line], line, error)
   CheckForFunctionLengths(filename, clean_lines, line, function_state, error)
   CheckForMultilineCommentsAndStrings(filename, clean_lines, line, error)
   CheckStyle(filename, clean_lines, line, file_extension, error)
@@ -3065,6 +3069,8 @@ def ProcessFileData(filename, file_extension, lines, error):
 
   RemoveMultiLineComments(filename, lines, error)
   clean_lines = CleansedLines(lines)
+  for line in xrange(clean_lines.NumLines()):
+    ParseNolintSuppressions(filename, clean_lines.raw_lines[line], line, error)
   for line in xrange(clean_lines.NumLines()):
     ProcessLine(filename, file_extension, clean_lines, line,
                 include_state, function_state, class_state, error)
@@ -3234,4 +3240,5 @@ def main():
 
 
 if __name__ == '__main__':
+  #ProcessFile('test/source.cpp', _cpplint_state.verbose_level)
   main()
