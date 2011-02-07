@@ -39,8 +39,8 @@ struct Sstr
             std::cout << t << std::endl;
 
             int l;
-  #ifdef _WIN64 // NOLINT(whitespace/preprocessor_directive)
-            if(l=1)int k;      // NOLINT(whitespace/parens)
+#ifdef _WIN64 // NOLINT(whitespace/preprocessor_directive)
+            if(l == 1)int k;      // NOLINT(whitespace/parens)
 #endif // _WIN64
         }
 
@@ -53,4 +53,35 @@ struct Sstr
     int t;
     int t;
     int p;
+}
+
+void main(int i, int j)
+{
+    if (i == j)
+        int pk;
+    else if (i != j)
+    {
+    }
+}
+
+void main(int i, int j)
+{
+    if (i == j)
+    {
+        {
+            while (true)
+            {
+                int p;
+            }
+        }
+    }
+    else if (i != j)
+    {
+    }
+    else
+    {
+    }
+}
+
+void ClassName::Method() {    // NOLINT
 }
