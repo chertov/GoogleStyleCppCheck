@@ -77,6 +77,7 @@ void main(int i, int j)
     }
     else if (i != j)
     {
+      int ds; // NOLINT
     }
     else
     {
@@ -84,4 +85,19 @@ void main(int i, int j)
 }
 
 void ClassName::Method() {    // NOLINT
+    switch (var)
+    {
+        case 0:
+        {
+            break;
+        }
+        case 1:
+        {
+            break;
+        }
+        default:
+        {
+            assert(false);
+        }
+    }
 }
