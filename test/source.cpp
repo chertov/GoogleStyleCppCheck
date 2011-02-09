@@ -11,11 +11,38 @@
 #define
 #define
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+namespace
+{
+namespace TestExample
+{
+namespace SourceCode
+{
 /// doxygen comment
 struct Sstr
 {
     int k;
 }
+
+class CBaseObject   // NOLINT(comment/doxygen)
+{
+public:
+    std::vector<int> array;  // NOLINT(build/include_what_you_use)
+}
+
+/// A class of arrays
+template <class T>
+class CArray : public CBaseObject
+{
+}
+
+    template <class T>
+    class CArray1 : public CBaseObject   // NOLINT(comment/doxygen)
+    {
+    }
 
 {
     /// asasdasd
@@ -101,3 +128,9 @@ void ClassName::Method() {    // NOLINT
         }
     }
 }
+}
+}
+}
+#ifdef __cplusplus
+}
+#endif

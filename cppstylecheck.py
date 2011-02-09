@@ -1393,11 +1393,19 @@ def CheckForNonStandardConstructs(filename, clean_lines, linenum,
     if not classinfo_stack[-1].name.startswith('C'):
         error(filename, linenum, 'build/class', 5,
           'Class name should start with capital C')
-    if linenum > 0:
+          
+          
+    if linenum > 2:
         # ищем на строчку выше класса комментарий в doxygen-стиле, который начинается с '///'
         if not Search(r'^\s*///', clean_lines.raw_lines[linenum - 1]):
-            error(filename, linenum, 'comment/doxygen', 5,
+          if Search(r'^\s*template', clean_lines.raw_lines[linenum - 1]):
+            if not Search(r'^\s*///', clean_lines.raw_lines[linenum - 2]):
+              error(filename, linenum, 'comment/doxygen', 5,
                 'There is no doxygen comment for class ' + classinfo_stack[-1].name)
+          else:
+            error(filename, linenum, 'comment/doxygen', 5,
+              'There is no doxygen comment for class ' + classinfo_stack[-1].name)
+          
   else:
       class_decl_match = Match(r'\s*(template\s*<[\w\s<>,:]*>\s*)?(struct)\s+(\w+(::\w+)*)', line)
       if class_decl_match:
@@ -1968,11 +1976,22 @@ def CheckBraces(filename, clean_lines, linenum, error):
   if spacesCount % 4 != 0:
       error(filename, linenum, 'whitespace/indent', 4, 'Found aliquant indent four spaces')
 
+
   # если строка вид '   {   ' т.е. скобка открывающая блок, то проверяем далее строки до закрывающей скобки
   #if Match(r'\s*{', line):
   if line.count('{') - line.count('}') > 0:
     if not Match(r'\s*{', line):
       error(filename, linenum, 'whitespace/indent', 4, 'Pair for { has a different indentation')
+    
+    # минимальное число отступов в текущем блоке { }
+    identsInBloc = 1;
+    
+    # получаем строку кода над текущей, определяем есть ли в ней namespace или extern "C"
+    # если есть, то берем минимальное число отступов в блоке равным 0
+    prevline = clean_lines.raw_lines[linenum - 1]
+    if prevline.count("namespace") > 0 or prevline.count("extern \"C\"") > 0:
+      identsInBloc = 0;
+    
     StartSpacesTabCount = spacesCount / 4   # запоминаем количество отступов перед открывающейся скобкой
     brOpenCount = 1    # переменная хранит текущее количество вложенных блоков
     nextlinenum = linenum
@@ -2011,7 +2030,7 @@ def CheckBraces(filename, clean_lines, linenum, error):
           if spacesTabCount != StartSpacesTabCount:
             error(filename, nextlinenum, 'whitespace/indent', 4, 'Line has no indentation in the block')
         else:
-          if not Match(r'\s*#',nextline) and spacesTabCount < StartSpacesTabCount + 1:
+          if not Match(r'\s*#',nextline) and spacesTabCount < StartSpacesTabCount + identsInBloc:
             error(filename, nextlinenum, 'whitespace/indent', 4, 'Line has no indentation in the block')
 
   # An else clause should be on the same line as the preceding closing brace.
