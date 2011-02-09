@@ -8,8 +8,21 @@
 
 #ifdef
 #ifdef
+    #define      // NOLINT
 #define
-#define
+
+namespace sourceCode
+{
+    namespace Test
+    {
+        void test1(); // и с корректным отступом будет правильно
+    void test2(); // и без него
+void test3(); // а вот так уже ошибка... но я поставлю NOLINT )
+    }
+    void test3(); // правильно
+void test3(); // и это правильно
+}
+
 
 #ifdef __cplusplus
 extern "C"
